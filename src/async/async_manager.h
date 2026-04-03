@@ -56,6 +56,10 @@ extern std::optional<AsyncManager> g_asyncManager;
 // -----------------------------------------------------------------------------
 
 #include "future_state.h"
+#include "thread_local_state.h"
+
+#include "telemetry/living_span.h"
+#include "telemetry/span.h"
 
 #include <condition_variable>
 #include <utility>
@@ -127,7 +131,36 @@ server::Future<T> server::AsyncManager::RunTaskOnNewCoroutine(
   std::shared_ptr<impl::FutureState<T>> future
     = std::make_shared<impl::FutureState<T>>();
 
-  // TODO
+  boost::context::continuation childContext = boost::context::callcc(
+    [task = std::move(task), future, span = impl::GetActiveSpan()](
+      boost::context::continuation&& parentContinuation)
+    {
+      parentContinuation = parentContinuation.resume();
+
+      impl::ThreadLocalCoroutineContext* context
+        = impl::GetThreadLocalCoroutineContext();
+
+      context->m_yieldCallback = [&parentContinuation]()
+        {
+          parentContinuation = parentContinuation.resume();
+        };
+      context->m_span = std::make_unique<LivingSpan>(LivingSpan::Create(span));
+
+      T result = task();
+
+      context->m_span.reset();
+      context->m_yieldCallback = {};
+
+      future->Fulfill(std::move(result));
+
+      return std::move(parentContinuation);
+    });
+
+  {
+    std::lock_guard lock{ m_readyContinuationsMutex };
+    m_readyContinuations.push_back(
+      std::make_shared<boost::context::continuation>(std::move(childContext)));
+  }
 
   return Future<T>{ future };
 }
