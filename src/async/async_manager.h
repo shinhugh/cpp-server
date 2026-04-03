@@ -57,6 +57,9 @@ extern std::optional<AsyncManager> g_asyncManager;
 
 #include "future_state.h"
 
+#include <condition_variable>
+#include <utility>
+
 // -----------------------------------------------------------------------------
 
 template <typename T>
@@ -66,7 +69,51 @@ server::Future<T> server::AsyncManager::RunTaskOnNewThread(
   std::shared_ptr<impl::FutureState<T>> future
     = std::make_shared<impl::FutureState<T>>();
 
-  // TODO
+  std::shared_ptr<bool> threadAddedToActivePool = std::make_shared<bool>(false);
+  std::shared_ptr<std::mutex> threadAddedToActivePoolMutex
+    = std::make_shared<std::mutex>();
+  std::shared_ptr<std::condition_variable> threadAddedToActivePoolCv
+    = std::make_shared<std::condition_variable>();
+
+  std::thread childThread{ [
+    this,
+    task = std::move(task),
+    future,
+    threadAddedToActivePool,
+    threadAddedToActivePoolMutex,
+    threadAddedToActivePoolCv]()
+    {
+      future->Fulfill(task());
+
+      {
+        std::unique_lock lock{ *threadAddedToActivePoolMutex };
+        while (!*threadAddedToActivePool)
+        {
+          threadAddedToActivePoolCv->wait(lock);
+        }
+      }
+
+      std::thread completeThread;
+      {
+        std::lock_guard lock{ m_activeThreadsMutex };
+        completeThread
+          = std::move(m_activeThreads.at(std::this_thread::get_id()));
+        m_activeThreads.erase(std::this_thread::get_id());
+      }
+      std::lock_guard lock{ m_completeThreadsMutex };
+      m_completeThreads.push_back(std::move(completeThread));
+    } };
+
+  {
+    std::lock_guard lock{ m_activeThreadsMutex };
+    m_activeThreads.emplace(childThread.get_id(), std::move(childThread));
+  }
+
+  {
+    std::lock_guard lock{ *threadAddedToActivePoolMutex };
+    *threadAddedToActivePool = true;
+  }
+  threadAddedToActivePoolCv->notify_one();
 
   return Future<T>{ future };
 }
