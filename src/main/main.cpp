@@ -1,5 +1,7 @@
 #include "async/async_manager.h"
 #include "async/async.h"
+#include "telemetry/log_manager.h"
+#include "telemetry/stdout_log_sink.h"
 #include "uv_loop/uv_loop.h"
 
 #include <chrono>
@@ -36,11 +38,16 @@ int main()
 
   server::InitializeProcessSpan();
 
+  server::g_stdoutLogSink.emplace();
+  server::g_logManager.emplace();
+  server::g_logManager->RegisterLogSink(*server::g_stdoutLogSink);
+
   server::g_asyncManager.emplace();
 
   server::g_uvLoop.emplace();
   server::g_uvLoop->SetSubsystems({
-    &(*server::g_asyncManager)
+    &(*server::g_asyncManager),
+    &(*server::g_logManager)
   });
 
   std::thread monitorForQuitThread{ MonitorForQuit };

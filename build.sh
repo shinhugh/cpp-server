@@ -19,6 +19,10 @@ clang++ src/subsystem/subsystem.cpp -c -o build/subsystem/subsystem.o -Isrc -D P
 
 mkdir -p build/telemetry
 clang++ src/telemetry/living_span.cpp -c -o build/telemetry/living_span.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/telemetry/log_manager.cpp -c -o build/telemetry/log_manager.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/telemetry/log_sink.cpp -c -o build/telemetry/log_sink.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/telemetry/log.cpp -c -o build/telemetry/log.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/telemetry/stdout_log_sink.cpp -c -o build/telemetry/stdout_log_sink.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
 mkdir -p build/test
 clang++ src/test/test.cpp -c -o build/test/test.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
