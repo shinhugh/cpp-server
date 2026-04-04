@@ -1,5 +1,7 @@
 #include "living_span.h"
 
+#include "log_severity.h"
+#include "log.h"
 #include "span.h"
 
 #if defined(PLATFORM_POSIX)
@@ -139,6 +141,26 @@ server::LivingSpan::LivingSpan(LivingSpan&& src)
 
 server::LivingSpan::~LivingSpan()
 {
+  if (m_alive)
+  {
+    std::chrono::steady_clock::time_point finishTime
+      = std::chrono::steady_clock::now();
+    std::stringstream ss;
+    ss
+      << "<span>"
+      << " trace_id: " << m_traceId
+      << ", span_id: " << m_spanId;
+    if (m_parentSpanId)
+    {
+      ss << ", parent_span_id: " << *m_parentSpanId;
+    }
+    ss
+      << ", start_time: "
+      << m_startTime.time_since_epoch().count()
+      << ", finish_time: "
+      << finishTime.time_since_epoch().count();
+    LOG_SPAN_TIME(*this, finishTime, server::LogSeverity::DEBUG, ss.str());
+  }
 }
 
 // -----------------------------------------------------------------------------
