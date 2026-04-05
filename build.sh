@@ -10,6 +10,9 @@ clang++ src/main/main.cpp -c -o build/main/main.o -Isrc -D PLATFORM_POSIX -g -Wa
 mkdir -p build/subsystem
 clang++ src/subsystem/subsystem.cpp -c -o build/subsystem/subsystem.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
+mkdir -p build/telemetry
+clang++ src/telemetry/living_span.cpp -c -o build/telemetry/living_span.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+
 mkdir -p build/test
 clang++ src/test/test.cpp -c -o build/test/test.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
@@ -19,12 +22,14 @@ clang++ src/uv_loop/uv_loop.cpp -c -o build/uv_loop/uv_loop.o -Isrc -D PLATFORM_
 clang++               \
   build/main/*.o      \
   build/subsystem/*.o \
+  build/telemetry/*.o \
   build/uv_loop/*.o   \
   -luv                \
   -o build/main.out
 
 clang++               \
   build/subsystem/*.o \
+  build/telemetry/*.o \
   build/test/*.o      \
   build/uv_loop/*.o   \
   -luv                \
