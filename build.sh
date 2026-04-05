@@ -4,6 +4,9 @@
 
 rm -rf build
 
+mkdir -p build/async
+clang++ src/async/thread_local_state.cpp -c -o build/async/thread_local_state.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+
 mkdir -p build/main
 clang++ src/main/main.cpp -c -o build/main/main.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
@@ -20,6 +23,7 @@ mkdir -p build/uv_loop
 clang++ src/uv_loop/uv_loop.cpp -c -o build/uv_loop/uv_loop.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
 clang++               \
+  build/async/*.o     \
   build/main/*.o      \
   build/subsystem/*.o \
   build/telemetry/*.o \
@@ -28,6 +32,7 @@ clang++               \
   -o build/main.out
 
 clang++               \
+  build/async/*.o     \
   build/subsystem/*.o \
   build/telemetry/*.o \
   build/test/*.o      \
