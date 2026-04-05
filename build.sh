@@ -13,12 +13,19 @@ clang++ src/subsystem/subsystem.cpp -c -o build/subsystem/subsystem.o -Isrc -D P
 mkdir -p build/test
 clang++ src/test/test.cpp -c -o build/test/test.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
+mkdir -p build/uv_loop
+clang++ src/uv_loop/uv_loop.cpp -c -o build/uv_loop/uv_loop.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+
 clang++               \
   build/main/*.o      \
   build/subsystem/*.o \
+  build/uv_loop/*.o   \
+  -luv                \
   -o build/main.out
 
 clang++               \
   build/subsystem/*.o \
   build/test/*.o      \
+  build/uv_loop/*.o   \
+  -luv                \
   -o build/test.out
