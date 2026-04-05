@@ -7,13 +7,18 @@ rm -rf build
 mkdir -p build/main
 clang++ src/main/main.cpp -c -o build/main/main.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
+mkdir -p build/subsystem
+clang++ src/subsystem/subsystem.cpp -c -o build/subsystem/subsystem.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+
 mkdir -p build/test
 clang++ src/test/test.cpp -c -o build/test/test.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
-clang++          \
-  build/main/*.o \
+clang++               \
+  build/main/*.o      \
+  build/subsystem/*.o \
   -o build/main.out
 
-clang++          \
-  build/test/*.o \
+clang++               \
+  build/subsystem/*.o \
+  build/test/*.o      \
   -o build/test.out
