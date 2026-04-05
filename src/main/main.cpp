@@ -1,3 +1,5 @@
+#include "async/async_manager.h"
+#include "async/async.h"
 #include "uv_loop/uv_loop.h"
 
 #include <chrono>
@@ -6,6 +8,7 @@
 #include <mutex>
 #include <optional>
 #include <thread>
+#include <unordered_set>
 
 // -----------------------------------------------------------------------------
 
@@ -31,7 +34,14 @@ int main()
   std::signal(SIGINT, [](int) { NotifyQuit(); });
   std::signal(SIGTERM, [](int) { NotifyQuit(); });
 
+  server::InitializeProcessSpan();
+
+  server::g_asyncManager.emplace();
+
   server::g_uvLoop.emplace();
+  server::g_uvLoop->SetSubsystems({
+    &(*server::g_asyncManager)
+  });
 
   std::thread monitorForQuitThread{ MonitorForQuit };
 
@@ -40,6 +50,8 @@ int main()
   NotifyQuit();
   monitorForQuitThread.join();
   server::g_uvLoop->ResetQuit();
+
+  server::TerminateProcessSpan();
 
   return 0;
 }

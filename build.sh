@@ -5,6 +5,10 @@
 rm -rf build
 
 mkdir -p build/async
+clang++ src/async/async_manager.cpp -c -o build/async/async_manager.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/async/async.cpp -c -o build/async/async.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/async/future_state.cpp -c -o build/async/future_state.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
+clang++ src/async/future.cpp -c -o build/async/future.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 clang++ src/async/thread_local_state.cpp -c -o build/async/thread_local_state.o -Isrc -D PLATFORM_POSIX -g -Wall -Wextra
 
 mkdir -p build/main
@@ -28,6 +32,7 @@ clang++               \
   build/subsystem/*.o \
   build/telemetry/*.o \
   build/uv_loop/*.o   \
+  -lboost_context     \
   -luv                \
   -o build/main.out
 
@@ -37,5 +42,6 @@ clang++               \
   build/telemetry/*.o \
   build/test/*.o      \
   build/uv_loop/*.o   \
+  -lboost_context     \
   -luv                \
   -o build/test.out
