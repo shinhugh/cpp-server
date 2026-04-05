@@ -33,8 +33,11 @@ void server::LogManager::Log(
   const std::string& message)
 {
   LogEntry entry{ span, time, severity, message };
-  std::lock_guard<std::mutex> lock{ m_entriesMutex };
-  m_entries.push_back(std::move(entry));
+  {
+    std::lock_guard<std::mutex> lock{ m_entriesMutex };
+    m_entries.push_back(std::move(entry));
+  }
+  FlushLogQueue();
 }
 
 // -----------------------------------------------------------------------------
@@ -46,8 +49,11 @@ void server::LogManager::Log(
   std::string&& message)
 {
   LogEntry entry{ span, time, severity, std::move(message) };
-  std::lock_guard<std::mutex> lock{ m_entriesMutex };
-  m_entries.push_back(std::move(entry));
+  {
+    std::lock_guard<std::mutex> lock{ m_entriesMutex };
+    m_entries.push_back(std::move(entry));
+  }
+  FlushLogQueue();
 }
 
 // -----------------------------------------------------------------------------
