@@ -8,6 +8,7 @@
 #include "telemetry/trace.h"
 
 #include <chrono>
+#include <csignal>
 #include <ctime>
 #include <functional>
 #include <iomanip>
@@ -23,6 +24,7 @@
 
 #define FLUSH_SPANS_INTERVAL_MS 250
 #define FLUSH_LOGS_INTERVAL_MS 200
+#define APP_TICK_INTERVAL_MS 50
 
 // -----------------------------------------------------------------------------
 
@@ -42,6 +44,10 @@ static void SerializeLogValue(
 
 // -----------------------------------------------------------------------------
 
+static bool s_quit = false;
+
+// -----------------------------------------------------------------------------
+
 int main(
     int argc, char *argv[])
 {
@@ -53,6 +59,21 @@ int main(
 static int Application(
     int, char *[])
 {
+  std::signal(
+      SIGINT,
+      [](
+          int)
+      {
+        s_quit = true;
+      });
+  std::signal(
+      SIGTERM,
+      [](
+          int)
+      {
+        s_quit = true;
+      });
+
   telemetry::LivingSpan span{"origin"};
 
   telemetry::RegisterSpanHandler(WriteSpanToStdout);
@@ -96,7 +117,14 @@ static int Application(
             telemetry::FlushLogs();
           }));
 
-  // Execute application logic here
+  while (!s_quit)
+  {
+    std::chrono::steady_clock::time_point startTime =
+        std::chrono::steady_clock::now();
+    // Execute one tick of application logic here
+    async::YieldUntil(
+        startTime + std::chrono::milliseconds(APP_TICK_INTERVAL_MS));
+  }
 
   span.Close();
 
